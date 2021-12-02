@@ -12,6 +12,16 @@
 .
 ```
 
+## 配置
+
+```js
+// ./config.js
+module.exports = {
+  memonic: "", // 助记词
+  rinkebyUrl: "", // 接口连接
+};
+```
+
 ## 参考
 
 - https://github.com/LiChangNan-Programmer/ethereum-contract-workflow
