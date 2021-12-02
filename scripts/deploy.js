@@ -5,7 +5,7 @@ const Web3 = require('web3');
 const { memonic, rinkebyUrl } = require('../config');
 
 // 1. 拿到 bytecode
-const contractPath = path.resolve(__dirname, '../compiled/Car.json');
+const contractPath = path.resolve(__dirname, '../compiled/ProjectList.json');
 const { abi, evm } = require(contractPath);
 
 // 2. 配置 provider
@@ -23,8 +23,8 @@ const web3 = new Web3(provider);
     // 5. 创建合约实例并且部署
     console.time('合约部署耗时');
     const result = await new web3.eth.Contract(abi)
-      .deploy({ data: evm.bytecode.object, arguments: ['AUDI'] })
-      .send({ from: accounts[0], gas: 1000000 });
+      .deploy({ data: evm.bytecode.object })
+      .send({ from: accounts[0], gas: 5000000 });
     console.timeEnd('合约部署耗时');
 
     const contractAddress = result.options.address.toLowerCase();
