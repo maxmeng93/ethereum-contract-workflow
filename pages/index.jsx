@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import ProjectList from "../lib/projectList";
 import Project from "../lib/project";
-import { Row, Col, Card } from "antd";
-import styles from "./styles.module.scss";
+import { Row, Col, Card, Statistic } from "antd";
 import web3 from "web3";
 import Layout from "./components/Layout";
 
@@ -10,8 +10,7 @@ const InfoBlock = (props) => {
   const { title, description } = props;
   return (
     <Card.Grid>
-      <strong className={styles.infoBlockTitle}>{title}</strong>
-      <p>{description}</p>
+      <Statistic title={description} value={title}></Statistic>
     </Card.Grid>
   );
 };
@@ -67,7 +66,10 @@ export default () => {
           >
             <Card
               title={project.description}
-              actions={[<span>立即投资</span>, <span>查看详情</span>]}
+              actions={[
+                <span>立即投资</span>,
+                <Link href={`/projects/${project.address}`}>查看详情</Link>,
+              ]}
             >
               <InfoBlock
                 title={`${web3.utils.fromWei(project.goal, "ether")} ETH`}

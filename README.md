@@ -1,5 +1,18 @@
 基于以太坊智能合约的 ADpp
 
+## 命令
+
+```bash
+# 开发
+yarn run dev
+
+# 部署智能合约
+yarn run deploy
+
+# 部署 DApp
+yarn run start
+```
+
 ## 目录结构
 
 ```
@@ -21,7 +34,3 @@ module.exports = {
   rinkebyUrl: "", // 接口连接
 };
 ```
-
-## 参考
-
-- https://github.com/LiChangNan-Programmer/ethereum-contract-workflow
