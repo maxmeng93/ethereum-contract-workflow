@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   message,
   Card,
@@ -7,6 +8,7 @@ import {
   InputNumber,
   Button,
   Spin,
+  Table,
 } from "antd";
 import web3 from "../../../lib/web3";
 import ProjectList from "../../../lib/projectList";
@@ -29,6 +31,59 @@ export async function getServerSideProps(context) {
     },
   };
 }
+
+const PaymentTable = (props) => {
+  const { investorCount, data } = props;
+  const columns = [
+    {
+      title: "支出理由",
+      dataIndex: "description",
+      key: "description",
+    },
+    {
+      title: "支出金额",
+      dataIndex: "amount",
+      key: "amount",
+      render: (amount) => {
+        return web3.utils.fromWei(amount, "ether");
+      },
+    },
+    {
+      title: "收款人",
+      dataIndex: "receiver",
+      key: "receiver",
+    },
+    {
+      title: "已完成？",
+      dataIndex: "completed",
+      key: "completed",
+      render: (text) => {
+        return text ? "是" : "否";
+      },
+    },
+    {
+      title: "投票状态",
+      dataIndex: "voterCount",
+      key: "voterCount",
+      render: (text, record) => {
+        return `${record.voterCount}/${investorCount}`;
+      },
+    },
+    {
+      title: "操作",
+      dataIndex: "action",
+      key: "action",
+      render: (text, record) => {
+        return [
+          <Button type="link">投赞成票</Button>,
+          <Button type="link">资金划转</Button>,
+        ];
+      },
+    },
+  ];
+
+  return <Table columns={columns} dataSource={data} rowKey="description" />;
+};
 
 const ProjectDetail = (props) => {
   const { query } = props;
@@ -61,6 +116,12 @@ const ProjectDetail = (props) => {
       owner,
     ] = Object.values(summary);
 
+    const tasks = [];
+    for (let i = 0; i < paymentCount; i++) {
+      tasks.push(contract.methods.payments(i).call());
+    }
+    const payments = await Promise.all(tasks);
+
     setProject({
       address: query.address,
       description,
@@ -71,6 +132,7 @@ const ProjectDetail = (props) => {
       investorCount,
       paymentCount,
       owner,
+      payments,
     });
   }, []);
 
@@ -98,14 +160,13 @@ const ProjectDetail = (props) => {
 
       // 发起转账
       const contract = Project(project.address);
-      const result = await contract.methods.contribute().send({
+      await contract.methods.contribute().send({
         from: owner,
         value: web3.utils.toWei(`${invest}`, "ether"),
         gas: "5000000",
       });
 
       message.success("投资成功");
-      console.log(result);
 
       setTimeout(() => {
         location.reload();
@@ -121,7 +182,13 @@ const ProjectDetail = (props) => {
     <Layout>
       <Spin spinning={loading}>
         <Card title={project.description}>
-          <Progress percent={30} />
+          <Progress
+            percent={
+              (web3.utils.fromWei(project.balance, "ether") /
+                web3.utils.fromWei(project.goal, "ether")) *
+              100
+            }
+          />
 
           <InfoBlock
             title={`${web3.utils.fromWei(project.goal, "ether")} ETH`}
@@ -156,6 +223,18 @@ const ProjectDetail = (props) => {
           立即投资
         </Button>
       </Spin>
+
+      <Card title="资金支持请求">
+        <Button type="primary">
+          <Link href={`/projects/${address}/payments/create`}>
+            创建资金支出请求
+          </Link>
+        </Button>
+        <PaymentTable
+          data={project.payments}
+          investorCount={project.investorCount}
+        ></PaymentTable>
+      </Card>
     </Layout>
   );
 };

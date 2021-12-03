@@ -67,7 +67,6 @@ export default () => {
             <Card
               title={project.description}
               actions={[
-                <span>立即投资</span>,
                 <Link href={`/projects/${project.address}`}>查看详情</Link>,
               ]}
             >

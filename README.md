@@ -34,3 +34,13 @@ module.exports = {
   rinkebyUrl: "", // 接口连接
 };
 ```
+
+## 参考
+
+BlockchainLabsNZ/awesome-solidity
+bkrem/awesome-solidity
+cjgdev/awesome-smart-contracts
+JoinColony/awesome-web3
+btomashvili/awesome-ethereum
+void4/awesome-ethereum
+https://juejin.cn/book/6844733720226856967/section/6844733720474157064

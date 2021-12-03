@@ -10,47 +10,39 @@ const CreateProject = () => {
   const [form] = Form.useForm();
 
   const toWei = (eth, type = "ether") => {
-    // return web3.utils.toWei(web3.utils.toBN(eth), type);
-    return web3.utils.toWei(eth + "", type);
+    return web3.utils.toWei(`${eth}`, type);
   };
 
   const onFinish = async (values) => {
-    const { description, minInvest, maxInvest, goal } = values;
-    if (minInvest <= 0) {
-      throw message.warning("项目最大投资金额必须大于0");
-    }
-    if (maxInvest <= 0) {
-      throw message.warning("项目最大投资金额必须大于0");
-    }
-    if (maxInvest < minInvest) {
-      throw message.warning("项目最小投资金额必须小于最大投资金额");
-    }
-    if (goal <= 0) {
-      throw message.warning("项目募资上限必须大于0");
-    }
-
-    setLoading(true);
-
-    const minInvestInWei = toWei(minInvest);
-    const maxInvestInWei = toWei(maxInvest);
-    const goalInWei = toWei(goal);
-
     try {
+      const { description, minInvest, maxInvest, goal } = values;
+      if (minInvest <= 0) {
+        throw message.warning("项目最大投资金额必须大于0");
+      }
+      if (maxInvest <= 0) {
+        throw message.warning("项目最大投资金额必须大于0");
+      }
+      if (maxInvest < minInvest) {
+        throw message.warning("项目最小投资金额必须小于最大投资金额");
+      }
+      if (goal <= 0) {
+        throw message.warning("项目募资上限必须大于0");
+      }
+
+      setLoading(true);
+
+      const minInvestInWei = toWei(minInvest);
+      const maxInvestInWei = toWei(maxInvest);
+      const goalInWei = toWei(goal);
+
       // 获取账号
       const accounts = await web3.eth.getAccounts();
-      console.log(accounts);
-      if (accounts.length === 0) {
-        console.log("没有找到账户，请先连接钱包");
-        return;
-      }
       const owner = accounts[0];
 
       // 创建项目
-      const result = await ProjectList.methods
+      await ProjectList.methods
         .createProject(description, minInvestInWei, maxInvestInWei, goalInWei)
         .send({ from: owner, gas: "5000000" });
-
-      console.log(result);
     } catch (error) {
       console.log(error);
     } finally {
