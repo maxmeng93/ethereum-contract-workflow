@@ -1,44 +1,98 @@
-import React, { useState, useEffect } from 'react';
-import Head from 'next/head';
-import Web3 from 'web3';
-import Layout from './components/Layout';
-import List from './List';
+import React, { useState, useEffect } from "react";
+import ProjectList from "../lib/projectList";
+import Project from "../lib/project";
+import { Row, Col, Card } from "antd";
+import styles from "./styles.module.scss";
+import web3 from "web3";
+import Layout from "./components/Layout";
 
-const Home = () => {
-  const [accounts, setAccounts] = useState([]);
+const InfoBlock = (props) => {
+  const { title, description } = props;
+  return (
+    <Card.Grid>
+      <strong className={styles.infoBlockTitle}>{title}</strong>
+      <p>{description}</p>
+    </Card.Grid>
+  );
+};
+
+export default () => {
+  const [projects, setProjects] = useState([]);
 
   useEffect(async () => {
-    const web3 = new Web3(window.web3.currentProvider);
+    const addressList = await ProjectList.methods.getProjects().call();
+    const summaryList = await Promise.all(
+      addressList.map((address) => Project(address).methods.getSummary().call())
+    );
 
-    const accounts = await web3.eth.getAccounts();
-
-    if (accounts.length === 0) {
-      console.log('请先连接钱包');
-      return;
-    }
-
-    let balances = await Promise.all(accounts.map(x => web3.eth.getBalance(x)));
-
-    balances = balances.map(wei => {
-      wei = web3.utils.toBN(wei);
-      return web3.utils.fromWei(wei, 'ether');
+    const data = addressList.map((address, i) => {
+      const [
+        description,
+        minInvest,
+        maxInvest,
+        goal,
+        balance,
+        investorCount,
+        paymentCount,
+        owner,
+      ] = Object.values(summaryList[i]);
+      return {
+        address,
+        description,
+        minInvest,
+        maxInvest,
+        goal,
+        balance,
+        investorCount,
+        paymentCount,
+        owner,
+      };
     });
 
-    console.log({ accounts, balances });
-
-    setAccounts(accounts);
+    setProjects(data);
   }, []);
 
   return (
-    <>
-      <Head>
-        <title>众筹 DApp</title>
-      </Head>
-      <Layout accounts={accounts}>
-        <List></List>
-      </Layout>
-    </>
-  )
+    <Layout>
+      <Row gutter={[16, 16]}>
+        {projects.map((project) => (
+          <Col
+            key={project.address}
+            xs={{ span: 24, offset: 0 }}
+            sm={{ span: 12, offset: 0 }}
+            md={{ span: 12, offset: 0 }}
+            lg={{ span: 12, offset: 0 }}
+            xl={{ span: 12, offset: 0 }}
+            xxl={{ span: 8, offset: 0 }}
+          >
+            <Card
+              title={project.description}
+              actions={[<span>立即投资</span>, <span>查看详情</span>]}
+            >
+              <InfoBlock
+                title={`${web3.utils.fromWei(project.goal, "ether")} ETH`}
+                description="募资上限"
+              />
+              <InfoBlock
+                title={`${web3.utils.fromWei(project.minInvest, "ether")} ETH`}
+                description="最小投资金额"
+              />
+              <InfoBlock
+                title={`${web3.utils.fromWei(project.maxInvest, "ether")} ETH`}
+                description="最大投资金额"
+              />
+              <InfoBlock
+                title={`${project.investorCount}人`}
+                description="参投人数"
+              />
+              <InfoBlock
+                title={`${web3.utils.fromWei(project.balance, "ether")} ETH`}
+                description="已募资金额"
+              />
+            </Card>
+          </Col>
+        ))}
+      </Row>
+    </Layout>
+  );
 };
-
-export default Home;
