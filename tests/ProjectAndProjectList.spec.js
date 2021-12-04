@@ -1,6 +1,7 @@
 const assert = require('assert');
 const path = require('path');
 const ganache = require('ganache-cli');
+const BigNumber = require('bignumber.js');
 const Web3 = require('web3');
 
 const web3 = new Web3(ganache.provider());
@@ -33,37 +34,42 @@ describe('Project Contract', () => {
     project = new web3.eth.Contract(ProjectABI, address);
   });
 
-  it("should save correct project properties", async () => {
+  it('should deploy ProjectList and Project', async () => {
+    assert.ok(projectList.options.address);
+    assert.ok(project.options.address);
+  });
+
+  it('should save correct project properties', async () => {
     const owner = await project.methods.owner().call();
     const description = await project.methods.description().call();
     const minInvest = await project.methods.minInvest().call();
     const maxInvest = await project.methods.maxInvest().call();
     const goal = await project.methods.goal().call();
 
-    expect(owner).toEqual(accounts[0]);
-    expect(description).toEqual("Ethereum DApp Tutorial");
-    expect(minInvest).toEqual("100");
-    expect(maxInvest).toEqual("10000");
-    expect(goal).toEqual("1000000");
+    assert.equal(owner, accounts[0]);
+    assert.equal(description, 'Ethereum DApp Tutorial');
+    assert.equal(minInvest, 100);
+    assert.equal(maxInvest, 10000);
+    assert.equal(goal, 1000000);
   });
 
-  it("should allow investor to contribute", async () => {
+  it('should allow investor to contribute', async () => {
     const investor = accounts[1];
     await project.methods.contribute().send({
       from: investor,
-      value: "200",
+      value: '200',
     });
 
     const amount = await project.methods.investors(investor).call();
-    expect(amount).toEqual("200");
+    assert.ok(amount == '200');
   });
 
-  it("should require minInvest", async () => {
+  it('should require minInvest', async () => {
     try {
       const investor = accounts[1];
       await project.methods.contribute().send({
         from: investor,
-        value: "10",
+        value: '10',
       });
       assert.ok(false);
     } catch (err) {
@@ -76,7 +82,7 @@ describe('Project Contract', () => {
       const investor = accounts[1];
       await project.methods.contribute().send({
         from: investor,
-        value: "100000",
+        value: '100000',
       });
       assert.ok(false);
     } catch (err) {
@@ -84,61 +90,38 @@ describe('Project Contract', () => {
     }
   });
 
-  it("check multiple investments", async () => {
-    // 项目方
+  it('should allow owner to create payment', async () => {
     const owner = accounts[0];
-    // 收款方
-    const receiver = accounts[1];
-    // 投资人 A、B
-    const investorA = accounts[2];
-    const investorB = accounts[3];
+    const receiver = accounts[2];
 
-    await project.methods.contribute().send({
-      from: investorA,
-      value: "5000",
+    await project.methods.createPayment('Rent Office', '500', receiver).send({
+      from: owner,
+      gas: '1000000',
     });
 
-    const firstPaymentMoney = await project.methods.investors(investorA).call();
-    const firstInvestmentsCount = await project.methods.investorCount().call();
-    expect(firstPaymentMoney).toEqual("5000");
-    expect(firstInvestmentsCount).toEqual("1");
-
-    await project.methods.contribute().send({
-      from: investorA,
-      value: "2000",
-    });
-
-    const secondPaymentMoney = await project.methods.investors(investorA).call();
-    const secondInvestmentsCount = await project.methods.investorCount().call();
-    expect(secondPaymentMoney).toEqual("7000");
-    expect(secondInvestmentsCount).toEqual("1");
-
-    await project.methods.contribute().send({
-      from: investorB,
-      value: "1000",
-    });
-
-    const thirdPaymentMoney = await project.methods.investors(investorB).call();
-    const thirdInvestmentsCount = await project.methods.investorCount().call();
-    expect(thirdPaymentMoney).toEqual("1000");
-    expect(thirdInvestmentsCount).toEqual("2");
+    const payment = await project.methods.payments(0).call();
+    assert.equal(payment.description, 'Rent Office');
+    assert.equal(payment.amount, '500');
+    assert.equal(payment.receiver, receiver);
+    assert.equal(payment.completed, false);
+    assert.equal(payment.voterCount, 0);
   });
 
   it("allows investor to approve payments", async () => {
     // 项目方
     const owner = accounts[0];
     // 收款方
-    const receiver = accounts[1];
+    const investor = accounts[1];
     // 投资人
-    const investorA = accounts[2];
+    const receiver = accounts[2];
 
     // 收款前的余额
     const oldBalance = new BigNumber(await web3.eth.getBalance(receiver));
 
     // 投资项目
     await project.methods.contribute().send({
-      from: investorA,
-      value: "3000",
+      from: investor,
+      value: "5000",
     });
 
     // 资金支出请求
@@ -147,30 +130,31 @@ describe('Project Contract', () => {
       gas: "5000000",
     });
 
-    // 投资人 A 赞成投票
+    // 投票
     await project.methods.approvePayment(0).send({
-      from: investorA,
-      gas: "5000000",
+      from: investor,
+      gas: "1000000",
     });
 
-    // // 资金划转
+    console.log(4)
+    // 资金划转
     await project.methods.doPayment(0).send({
       from: owner,
-      gas: "5000000",
+      gas: "1000000",
     });
 
+    console.log(5)
     // 检查 payment 状态
     const payment = await project.methods.payments(0).call();
-    expect(payment.completed).toEqual(true);
-    expect(payment.voterCount).toEqual("1");
-    const approvePeople = payment.approve.split("-").filter(Boolean);
-    expect(approvePeople.includes(investorA.toLowerCase())).toEqual(true);
+    assert.equal(payment.completed, true);
+    assert.equal(payment.voterCount, 1);
 
     // 收款后的余额
     const newBalance = new BigNumber(await web3.eth.getBalance(receiver));
     const balanceDiff = newBalance.minus(oldBalance);
+    console.log({ oldBalance, newBalance, balanceDiff });
 
     // 确保精确的余额变化
-    expect(balanceDiff.toNumber()).toEqual(2000);
+    assert.equal(balanceDiff, 2000);
   });
 });

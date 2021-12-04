@@ -3,17 +3,39 @@ import "./SafeMath.sol";
 
 pragma solidity ^0.8.5;
 
+// contract Ownable {
+//     address public owner;
+//     event OwnershipTransferred(
+//         address indexed previousOwner,
+//         address indexed newOwner
+//     );
+
+//     function Ownable() public {
+//         owner = msg.sender;
+//     }
+
+//     modifier onlyOwner() {
+//         require(msg.sender == owner);
+//         _;
+//     }
+
+//     function transferOwnership(address newOwner) public onlyOwner {
+//         require(newOwner != address(0));
+//         OwnershipTransferred(owner, newOwner);
+//         owner = newOwner;
+//     }
+// }
+
 contract Project {
     using SafeMath for uint256;
 
     struct Payment {
         string description;
         uint256 amount;
-        uint256 voterCount;
         address payable receiver;
         bool completed;
-        string approve;
-        string disApprove;
+        mapping(address => bool) voters;
+        uint256 voterCount;
     }
 
     address public owner;
@@ -26,7 +48,7 @@ contract Project {
 
     Payment[] public payments;
 
-    modifier ownerOnly() {
+    modifier onlyOwner() {
         require(msg.sender == owner);
         _;
     }
@@ -61,11 +83,12 @@ contract Project {
         }
     }
 
+    // 创建支出请求
     function createPayment(
         string memory _description,
         uint256 _amount,
         address payable _receiver
-    ) public ownerOnly {
+    ) public onlyOwner {
         uint256 paymentsCount = payments.length;
         payments.push();
 
@@ -77,39 +100,24 @@ contract Project {
         newPayment.voterCount = 0;
     }
 
+    // 赞成支出请求
     function approvePayment(uint256 index) public {
         Payment storage payment = payments[index];
 
         // must be investor to vote
         require(investors[msg.sender] > 0);
 
-        // waiting to vote
-        require(payment.completed == false);
-        payment.completed = true;
+        // can not vote twice
+        require(!payment.voters[msg.sender]);
+
+        payment.voters[msg.sender] = true;
         payment.voterCount += 1;
-        payment.approve = append(payment.approve, "-", toString(msg.sender));
     }
 
-    function disApprovePayment(uint256 index) public {
+    function doPayment(uint256 index) public onlyOwner {
         Payment storage payment = payments[index];
 
-        // must be investor to vote
-        require(investors[msg.sender] > 0);
-
-        // waiting to vote
-        require(payment.completed == false);
-        payment.completed = true;
-        payment.disApprove = append(
-            payment.disApprove,
-            "-",
-            toString(msg.sender)
-        );
-    }
-
-    function doPayment(uint256 index) public ownerOnly {
-        Payment storage payment = payments[index];
-
-        require(payment.completed);
+        require(!payment.completed);
         require(address(this).balance >= payment.amount);
         require(payment.voterCount > (investorCount / 2));
 

@@ -33,7 +33,61 @@ export async function getServerSideProps(context) {
 }
 
 const PaymentTable = (props) => {
-  const { investorCount, data } = props;
+  const { investorCount, data, address, owner } = props;
+  const [loading, setLoading] = useState(false);
+
+  // 投票
+  const approvePayment = async (i) => {
+    try {
+      setLoading(true);
+      const accounts = await web3.eth.getAccounts();
+      const investor = accounts[0];
+
+      const contract = Project(address);
+      await contract.methods
+        .approvePayment(i)
+        .send({ from: investor, gas: "5000000" });
+
+      message.success("投票成功");
+
+      setTimeout(() => {
+        location.reload();
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 资金划转
+  const doPayment = async (i) => {
+    try {
+      setLoading(true);
+      const accounts = await web3.eth.getAccounts();
+      const sender = accounts[0];
+
+      if (sender !== owner) {
+        throw message.warning("只有管理员才能划转资金");
+      }
+
+      const contract = Project(address);
+      await contract.methods
+        .doPayment(i)
+        .send({ from: sender, gas: "5000000" });
+
+      message.success("资金划转成功");
+
+      setTimeout(() => {
+        location.reload();
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns = [
     {
       title: "支出理由",
@@ -73,16 +127,34 @@ const PaymentTable = (props) => {
       title: "操作",
       dataIndex: "action",
       key: "action",
-      render: (text, record) => {
-        return [
-          <Button type="link">投赞成票</Button>,
-          <Button type="link">资金划转</Button>,
-        ];
+      render: (text, row, index) => {
+        const buttons = [];
+        if (!row.completed) {
+          buttons.push(
+            <Button key="1" type="link" onClick={() => approvePayment(index)}>
+              投赞成票
+            </Button>
+          );
+        }
+
+        if (!row.completed && row.voterCount / investorCount > 0.5) {
+          buttons.push(
+            <Button type="link" onClick={() => doPayment(index)}>
+              资金划转
+            </Button>
+          );
+        }
+
+        return buttons;
       },
     },
   ];
 
-  return <Table columns={columns} dataSource={data} rowKey="description" />;
+  return (
+    <Spin spinning={loading}>
+      <Table columns={columns} dataSource={data} rowKey="description" />
+    </Spin>
+  );
 };
 
 const ProjectDetail = (props) => {
@@ -233,6 +305,8 @@ const ProjectDetail = (props) => {
         <PaymentTable
           data={project.payments}
           investorCount={project.investorCount}
+          address={address}
+          owner={project.owner}
         ></PaymentTable>
       </Card>
     </Layout>
