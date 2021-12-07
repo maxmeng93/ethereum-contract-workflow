@@ -11,7 +11,6 @@ import {
   Table,
 } from "antd";
 import web3 from "../../../lib/web3";
-import ProjectList from "../../../lib/projectList";
 import Project from "../../../lib/project";
 import Layout from "../../components/Layout";
 

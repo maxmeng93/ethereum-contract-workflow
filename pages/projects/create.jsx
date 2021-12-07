@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { message, Spin, Form, Input, InputNumber, Button } from "antd";
-import web3 from "../../../lib/web3";
-import ProjectList from "../../../lib/projectList";
-import Layout from "../../components/Layout";
+import web3 from "../../lib/web3";
+import ProjectList from "../../lib/projectList";
+import Layout from "../components/Layout";
 
 const CreateProject = () => {
   const rules = [{ required: true, message: "字段必填" }];

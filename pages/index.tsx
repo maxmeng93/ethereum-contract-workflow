@@ -6,7 +6,7 @@ import { Row, Col, Card, Statistic } from "antd";
 import web3 from "web3";
 import Layout from "./components/Layout";
 
-const InfoBlock = (props) => {
+const InfoBlock = (props: {title: string, description: string}) => {
   const { title, description } = props;
   return (
     <Card.Grid>
@@ -15,7 +15,7 @@ const InfoBlock = (props) => {
   );
 };
 
-export default () => {
+export default function Index () {
   const [projects, setProjects] = useState([]);
 
   useEffect(async () => {
@@ -54,7 +54,7 @@ export default () => {
   return (
     <Layout>
       <Row gutter={[16, 16]}>
-        {projects.map((project) => (
+        {projects.map((project: any) => (
           <Col
             key={project.address}
             xs={{ span: 24, offset: 0 }}
@@ -67,7 +67,7 @@ export default () => {
             <Card
               title={project.description}
               actions={[
-                <Link href={`/projects/${project.address}`}>查看详情</Link>,
+                <Link key="detail" href={`/projects/${project.address}`}>查看详情</Link>,
               ]}
             >
               <InfoBlock

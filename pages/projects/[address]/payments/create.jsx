@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { message, Form, Spin, Input, InputNumber, Button } from "antd";
-import Layout from "../../components/Layout";
-import Project from "../../../lib/project";
-import web3 from "../../../lib/web3";
+import Layout from "../../../components/Layout";
+import Project from "../../../../lib/project";
+import web3 from "../../../../lib/web3";
 
 export async function getServerSideProps(context) {
   return {
