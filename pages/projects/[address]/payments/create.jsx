@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { message, Form, Spin, Input, InputNumber, Button } from "antd";
-import Layout from "../../../components/Layout";
-import Project from "../../../../lib/project";
-import web3 from "../../../../lib/web3";
+import Project from "@/lib/project";
+import web3 from "@/lib/web3";
 
 export async function getServerSideProps(context) {
   return {
@@ -13,7 +12,7 @@ export async function getServerSideProps(context) {
   };
 }
 
-const Payment = (props) => {
+export default function Payment(props) {
   const router = useRouter();
   const { query } = props;
   const { address } = query;
@@ -80,32 +79,28 @@ const Payment = (props) => {
   };
 
   return (
-    <Layout>
-      <Spin spinning={loading}>
-        <Form
-          labelCol={{ span: 4 }}
-          wrapperCol={{ span: 14 }}
-          layout="horizontal"
-          onFinish={onFinish}
-        >
-          <Form.Item label="支出理由" name="description" rules={rules}>
-            <Input></Input>
-          </Form.Item>
-          <Form.Item label="支出金额" name="amount" rules={rules}>
-            <InputNumber addonAfter="eth" min={0}></InputNumber>
-          </Form.Item>
-          <Form.Item label="收款方" name="receiver" rules={rules}>
-            <Input></Input>
-          </Form.Item>
-          <Form.Item wrapperCol={{ span: 12, offset: 6 }}>
-            <Button type="primary" htmlType="submit">
-              提交
-            </Button>
-          </Form.Item>
-        </Form>
-      </Spin>
-    </Layout>
+    <Spin spinning={loading}>
+      <Form
+        labelCol={{ span: 4 }}
+        wrapperCol={{ span: 14 }}
+        layout="horizontal"
+        onFinish={onFinish}
+      >
+        <Form.Item label="支出理由" name="description" rules={rules}>
+          <Input></Input>
+        </Form.Item>
+        <Form.Item label="支出金额" name="amount" rules={rules}>
+          <InputNumber addonAfter="eth" min={0}></InputNumber>
+        </Form.Item>
+        <Form.Item label="收款方" name="receiver" rules={rules}>
+          <Input></Input>
+        </Form.Item>
+        <Form.Item wrapperCol={{ span: 12, offset: 6 }}>
+          <Button type="primary" htmlType="submit">
+            提交
+          </Button>
+        </Form.Item>
+      </Form>
+    </Spin>
   );
-};
-
-export default Payment;
+}

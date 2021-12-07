@@ -10,18 +10,17 @@ import {
   Spin,
   Table,
 } from "antd";
-import web3 from "../../../lib/web3";
-import Project from "../../../lib/project";
-import Layout from "../../components/Layout";
+import web3 from "@/lib/web3";
+import Project from "@/lib/project";
 
-const InfoBlock = (props) => {
+function InfoBlock(props) {
   const { title, description } = props;
   return (
     <Card.Grid>
       <Statistic title={description} value={title}></Statistic>
     </Card.Grid>
   );
-};
+}
 
 export async function getServerSideProps(context) {
   return {
@@ -31,7 +30,7 @@ export async function getServerSideProps(context) {
   };
 }
 
-const PaymentTable = (props) => {
+function PaymentTable(props) {
   const { investorCount, data, address, owner } = props;
   const [loading, setLoading] = useState(false);
 
@@ -154,9 +153,9 @@ const PaymentTable = (props) => {
       <Table columns={columns} dataSource={data} rowKey="description" />
     </Spin>
   );
-};
+}
 
-const ProjectDetail = (props) => {
+export default function ProjectDetail(props) {
   const { query } = props;
   const { address } = query;
 
@@ -250,7 +249,7 @@ const ProjectDetail = (props) => {
   };
 
   return (
-    <Layout>
+    <>
       <Spin spinning={loading}>
         <Card title={project.description}>
           <Progress
@@ -308,8 +307,6 @@ const ProjectDetail = (props) => {
           owner={project.owner}
         ></PaymentTable>
       </Card>
-    </Layout>
+    </>
   );
-};
-
-export default ProjectDetail;
+}

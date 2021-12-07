@@ -12,33 +12,36 @@ import styles from "./style.module.scss";
 
 const { Header, Sider, Content } = Layout;
 
-export default (props) => {
+export default function PageLayout(props) {
   const [collapsed, setCollapsed] = useState(false);
 
   const [accounts, setAccounts] = useState([]);
 
-  useEffect(async () => {
-    const web3 = new Web3(window.web3.currentProvider);
+  useEffect(() => {
+    async function init() {
+      const web3 = new Web3(window.web3.currentProvider);
 
-    const accounts = await web3.eth.getAccounts();
+      const accounts = await web3.eth.getAccounts();
 
-    if (accounts.length === 0) {
-      console.log("请先连接钱包");
-      return;
+      if (accounts.length === 0) {
+        console.log("请先连接钱包");
+        return;
+      }
+
+      let balances = await Promise.all(
+        accounts.map((x) => web3.eth.getBalance(x))
+      );
+
+      balances = balances.map((wei) => {
+        return web3.utils.fromWei(web3.utils.toBN(wei), "ether");
+      });
+
+      console.log({ accounts, balances });
+
+      setAccounts(accounts);
     }
 
-    let balances = await Promise.all(
-      accounts.map((x) => web3.eth.getBalance(x))
-    );
-
-    balances = balances.map((wei) => {
-      wei = web3.utils.toBN(wei);
-      return web3.utils.fromWei(wei, "ether");
-    });
-
-    console.log({ accounts, balances });
-
-    setAccounts(accounts);
+    init();
   }, []);
 
   return (
@@ -51,7 +54,7 @@ export default (props) => {
           <div className={styles.logo}>{collapsed ? "筹" : "众筹 DApp"}</div>
           <Menu theme="dark" mode="inline" defaultSelectedKeys={["1"]}>
             <Menu.Item key="1" icon={<UserOutlined />}>
-              <Link href="/">项目列表</Link>
+              <Link href="/projects">项目列表</Link>
             </Menu.Item>
           </Menu>
         </Sider>
@@ -103,4 +106,4 @@ export default (props) => {
       </Layout>
     </>
   );
-};
+}
